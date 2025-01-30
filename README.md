@@ -27,14 +27,14 @@ git clone https://github.com/Avalanche-Team1-DAO-Kenya/Token-Contract-for-Digita
 ```
 ### 2. Install Dependencies:
 ```bash
-npx hardhat compile
+npm installl
 ```
 ### 3. Compile the Contracts: 
 ```bash
 npx hardhat compile
 ```
 ### 4. Configure the Avalanche Network
-Open the hardhat.config.js file and add your Avalanche network details under the networks section.
+Open the ```hardhat.config.js ```file and add your Avalanche network details under the networks section.
 ### 5. Deploy to Avalanche network:
 ```bash
 npx hardhat run scripts/deploy.js --network avalanche

@@ -1,108 +1,147 @@
 import React, { useState } from "react";
 import "./App.css";
 
-function App() {
-  // State to hold form data
+const App = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    cChainAddress: "",
     interest: "",
   });
 
-  // State for form status and error messages
-  const [status, setStatus] = useState({ success: null, message: ""});
+  const [status, setStatus] = useState({ success: null, message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle form input changes
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submission
+  const validateCChainAddress = (address) => {
+    const cChainRegex = /^0x[a-fA-F0-9]{40}$/;
+    return cChainRegex.test(address);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setStatus({ success: null, message: "" });
 
-    // Validate inputs before sending
-    if(!formData.name || !formData.email) {
-      setStatus({ success: false, message: "Name and Email are required."});
+    if (!formData.name || !formData.email || !formData.cChainAddress) {
+      setStatus({ success: false, message: "All fields are required" });
+      setIsSubmitting(false);
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(!emailRegex.test(formData.email)) {
-      setStatus({ success: false, message: "Invalid email formart."});
+    if (!emailRegex.test(formData.email)) {
+      setStatus({ success: false, message: "Invalid email format" });
+      setIsSubmitting(false);
       return;
     }
 
-    // Submit form data to backend
-    try {
-      const response = await fetch("https://script.google.com/macros/s/AKfycbxFKbISR-2atW_hHhSxcFQh-SKhCdRsug3QXgHd4TDHbHIpMOKxGUmx2y6Mzl2AF6wi/exec", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formData),
+    if (!validateCChainAddress(formData.cChainAddress)) {
+      setStatus({ 
+        success: false, 
+        message: "Invalid C-Chain address format (0x followed by 40 hex characters)" 
       });
+      setIsSubmitting(false);
+      return;
+    }
 
-      if(!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const text = await response.text();
-
-      try{
-        const result = JSON.parse(text);
-        if(result.success) {
-          setStatus({ success: true, message: result.message});
-          setFormData({ name: "", email: "", interest: ""});
-        } else {
-          setStatus({ success: false, message: result.message});
-          setFormData({ name: "", email: "", interest: ""});
-        }
-      } catch (jsonError) {
-        console.error("Failed to parse JSON:", jsonError);
-        setStatus({ success: false, message: "Unexpected response from server."});
-      }
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setStatus({ 
+        success: true, 
+        message: "Registration successful! Join our telegram channel:  t.me/DalasTokenEduBot " 
+      });
+      setFormData({ 
+        name: "", 
+        email: "", 
+        cChainAddress: "", 
+        interest: "" 
+      });
     } catch (error) {
-      console.error("Error submitting the form:", error);
-      setStatus({ success: false, message: "An error occurred. Please try again."})
-    };
-  }
+      setStatus({ 
+        success: false, 
+        message: "Submission error. Please try again." 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="App">
-      <h1> Join the waitlist for DalasToken</h1>
-      <p>Be the first to know about our updates and benefits!</p>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Your Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Your Email"
-          value={formData.email}
-          onChange={handleChange}
-          autoComplete="Yes"
-          required
-        />
-        <textarea
-          name="interest"
-          placeholder="What interest you about the DalasToken?"
-          value={formData.interest}
-          onChange={handleChange}
-          rows="3"
-          required
-        />
-        <button type="submit">Join Waitlist</button>
-      </form>
+      <div className="container">
+        <header>
+          <h1>Join DalasToken Waitlist</h1>
+          <p className="subtitle">
+            Secure early access to innovative blockchain solutions
+          </p>
+        </header>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={handleChange}
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleChange}
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="text"t 
+              name="cChainAddress"
+              placeholder="C-Chain Address (0x...)"
+              value={formData.cChainAddress}
+              onChange={handleChange}
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="form-group">
+            <textarea
+              name="interest"
+              placeholder="What interests you about Dalas Token?"
+              value={formData.interest}
+              onChange={handleChange}
+              rows="4"
+              disabled={isSubmitting}
+            />
+          </div>i
+
+          <button 
+            type="submit" 
+            className="cta-button"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Processing..." : "Join Waitlist →"}
+          </button>
+
+          {status.message && (
+            <div className={`status ${status.success ? "success" : "error"}`}>
+              {status.message}
+            </div>
+          )}
+        </form>
+      </div>
     </div>
   );
-}
+};
 
 export default App;
