@@ -26,33 +26,38 @@ const App = () => {
     setIsSubmitting(true);
     setStatus({ success: null, message: "" });
 
-    if (!formData.name || !formData.email || !formData.cChainAddress) {
-      setStatus({ success: false, message: "All fields are required" });
-      setIsSubmitting(false);
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setStatus({ success: false, message: "Invalid email format" });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!validateCChainAddress(formData.cChainAddress)) {
-      setStatus({ 
-        success: false, 
-        message: "Invalid C-Chain address format (0x followed by 40 hex characters)" 
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Validate form data
+      if (!formData.name || !formData.email || !formData.cChainAddress) {
+        throw new Error("All fields are required");
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error("Invalid email format");
+      }
+
+      if (!validateCChainAddress(formData.cChainAddress)) {
+        throw new Error("Invalid C-Chain address format (0x followed by 40 hex characters)");
+      }
+
+      // Send to Firebase backend
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || "Registration failed");
+      }
+
+      // Success handling
       setStatus({ 
         success: true, 
-        message: "Registration successful! Join our telegram channel:  t.me/DalasTokenEduBot " 
+        message: result.message 
       });
       setFormData({ 
         name: "", 
@@ -60,10 +65,11 @@ const App = () => {
         cChainAddress: "", 
         interest: "" 
       });
+
     } catch (error) {
       setStatus({ 
         success: false, 
-        message: "Submission error. Please try again." 
+        message: error.message 
       });
     } finally {
       setIsSubmitting(false);
@@ -105,7 +111,7 @@ const App = () => {
 
           <div className="form-group">
             <input
-              type="text"t 
+              type="text"
               name="cChainAddress"
               placeholder="C-Chain Address (0x...)"
               value={formData.cChainAddress}
@@ -123,7 +129,7 @@ const App = () => {
               rows="4"
               disabled={isSubmitting}
             />
-          </div>i
+          </div>
 
           <button 
             type="submit" 
@@ -136,6 +142,14 @@ const App = () => {
           {status.message && (
             <div className={`status ${status.success ? "success" : "error"}`}>
               {status.message}
+              {status.success && (
+                <div className="telegram-link">
+                  Join our Telegram:{" "}
+                  <a href="https://t.me/DalasTokenEduBot" target="_blank" rel="noopener noreferrer">
+                    t.me/DalasTokenEduBot
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </form>

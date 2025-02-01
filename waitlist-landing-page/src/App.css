@@ -158,3 +158,19 @@ textarea {
     font-size: 1rem;
   }
 }
+.telegram-link {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: rgba(0, 123, 255, 0.1);
+  border-radius: 4px;
+}
+
+.telegram-link a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.telegram-link a:hover {
+  text-decoration: underline;
+}
